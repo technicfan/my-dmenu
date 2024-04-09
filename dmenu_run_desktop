@@ -1,15 +1,15 @@
 #!/bin/sh
 
-cachedir="$HOME/.cache"
-cache="$cachedir/dmenu_run"
+cachedir="$HOME/.cache/dmenu"
+cache="$cachedir/dmenu_desktop_run"
 cache_desktop_cmd_global="$cachedir/dmenu_desktop_cmd_global"
 cache_desktop_cmd_local="$cachedir/dmenu_desktop_cmd_local"
 
 dmenu_path_desktop >/dev/null
 
 selection=$( (cat "$cache"; \
-              awk -F ", " '{print $1}' "$cache_desktop_cmd_global"; \
-              awk -F ", " '{print $1}' "$cache_desktop_cmd_local") | \
+              awk -F "; " '{print $1}' "$cache_desktop_cmd_global"; \
+              awk -F "; " '{print $1}' "$cache_desktop_cmd_local") | \
             sort -u | dmenu "$@")
 
 if command -v $selection
@@ -17,11 +17,11 @@ then
     $selection
 elif grep -qF "$selection" "$cache_desktop_cmd_global"
 then
-    cmd=$(grep "$selection" "$cache_desktop_cmd_global" | awk -F ", " '{print $2}')
+    cmd=$(grep "$selection" "$cache_desktop_cmd_global" | awk -F "; " '{print $2}')
     printf "$cmd" | ${SHELL:-"/bin/sh"}
 elif grep -qF "$selection" "$cache_desktop_cmd_local"
 then
-    cmd=$(grep "$selection" "$cache_desktop_cmd_local" | awk -F ", " '{print $2}')
+    cmd=$(grep "$selection" "$cache_desktop_cmd_local" | awk -F "; " '{print $2}')
     printf "$cmd" | ${SHELL:-"/bin/sh"}
 else
     $selection
