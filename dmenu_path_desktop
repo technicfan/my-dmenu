@@ -1,12 +1,12 @@
 #!/bin/bash
 
-cachedir="$HOME/.cache/dmenu"
+cachedir="$HOME/.cache/dmenu_desktop"
 cache="$cachedir/dmenu_desktop_run"
 cache_desktop_global="$cachedir/dmenu_desktop_global"
 cache_desktop_local="$cachedir/dmenu_desktop_local"
-cache_desktop_diff="$cachedir/dmenu_desktop_diff"
 cache_desktop_cmd_global="$cachedir/dmenu_desktop_cmd_global"
 cache_desktop_cmd_local="$cachedir/dmenu_desktop_cmd_local"
+cache_desktop_diff="$cachedir/dmenu_desktop_diff"
 
 get_desktop_details()
 {
@@ -62,7 +62,7 @@ add_remove_desktop()
 	done
 }
 
-check_rebuild_cache()
+check_changed_cache()
 {
 	local IFS=:
 	if stest -dqr -n "$1" $PATH
@@ -71,32 +71,24 @@ check_rebuild_cache()
 	fi
 }
 
+check_changed_desktop()
+{
+	if [[ -n $(diff "$1" <(find "$3" -type f -name "*.desktop")) ]] || ! cat "$1"
+	then
+		if ! cat "$2" || ! cat "$1"
+		then
+			find "$3" -type f -name "*.desktop" > "$1"
+			rebuild_desktop_cache "$1" "$2"
+		else
+			diff "$1" <(find "$3" -type f -name "*.desktop") > "$cache_desktop_diff"
+			add_remove_desktop "$cache_desktop_diff" "$2"
+			find "$3" -type f -name "*.desktop" > "$1"
+		fi
+	fi
+}
+
 [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
 
-check_rebuild_cache "$cache"
-
-if [[ -n $(diff "$cache_desktop_global" <(find /usr/share/applications/ -type f -name "*.desktop")) ]] || ! cat "$cache_desktop_global"
-then
-	if ! cat "$cache_desktop_cmd_global" || ! cat "$cache_desktop_global"
-	then
-		find /usr/share/applications/ -type f -name "*.desktop" > "$cache_desktop_global"
-		rebuild_desktop_cache "$cache_desktop_global" "$cache_desktop_cmd_global"
-	else
-		diff "$cache_desktop_global" <(find /usr/share/applications/ -type f -name "*.desktop") > "$cache_desktop_diff"
-		add_remove_desktop "$cache_desktop_diff" "$cache_desktop_cmd_global"
-		find /usr/share/applications/ -type f -name "*.desktop" > "$cache_desktop_global"
-	fi
-fi
-
-if [[ -n $(diff "$cache_desktop_local" <(find $HOME/.local/share/applications -type f -name "*.desktop")) ]] || ! cat "$cache_desktop_local"
-then
-	if ! cat "$cache_desktop_cmd_local" || ! cat "$cache_desktop_local"
-	then
-		find $HOME/.local/share/applications -type f -name "*.desktop" > "$cache_desktop_local"
-		rebuild_desktop_cache "$cache_desktop_local" "$cache_desktop_cmd_local"
-	else
-		diff "$cache_desktop_local" <(find $HOME/.local/share/applications -type f -name "*.desktop") > "$cache_desktop_diff"
-		add_remove_desktop "$cache_desktop_diff" "$cache_desktop_cmd_local"
-		find $HOME/.local/share/applications -type f -name "*.desktop" > "$cache_desktop_local"
-	fi
-fi
+check_changed_cache "$cache"
+check_changed_desktop "$cache_desktop_global" "$cache_desktop_cmd_global" "/usr/share/applications/"
+check_changed_desktop "$cache_desktop_local" "$cache_desktop_cmd_local" "$HOME/.local/share/applications/"
