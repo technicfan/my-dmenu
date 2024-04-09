@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cachedir="$HOME/.cache/dmenu"
+cachedir="$HOME/.cache/dmenu_desktop"
 cache="$cachedir/dmenu_desktop_run"
 cache_desktop_cmd_global="$cachedir/dmenu_desktop_cmd_global"
 cache_desktop_cmd_local="$cachedir/dmenu_desktop_cmd_local"
