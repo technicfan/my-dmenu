@@ -1,2 +1,16 @@
 #!/bin/sh
-dmenu_path_desktop | dmenu "$@" | ${SHELL:-"/bin/sh"} &
+
+cache_cmd="$HOME/.cache/dmenu_cmd"
+
+selection=$(dmenu_path_desktop | sort -u | dmenu "$@")
+
+if command -v $selection
+then
+    $selection
+elif grep -qF "$selection" "$cache_cmd"
+then
+    cmd=$(grep "$selection" "$cache_cmd" | awk -F ", " '{print $2}')
+    printf "$cmd" | ${SHELL:-"/bin/sh"}
+else
+    $selection
+fi

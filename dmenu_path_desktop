@@ -1,7 +1,58 @@
 #!/bin/bash
-entries=$(ls /usr/share/applications/)
-for entry in $entries; do
-  if [[ $entry == *.desktop ]]; then
-    echo "${entry%.*}"
-  fi
-done;
+
+cachedir="$HOME/.cache"
+cache="$cachedir/dmenu_run"
+cache_desktop_global="$cachedir/dmenu_desktop_global"
+cache_desktop_local="$cachedir/dmenu_desktop_local"
+cache_cmd="$cachedir/dmenu_cmd"
+
+desktop_cmd()
+{
+	rm "$cache_cmd"
+	for i in $(seq 1 $(find /usr/share/applications/ | wc -l))
+	do
+		file=$(find /usr/share/applications/ | awk NR==$i)
+		if [[ $file = *.desktop ]]
+		then
+			name=$(grep -v GenericName "$file" | awk -F "=" '/Name=/ {print $2}' | awk NR==1)
+			exec=$(grep "Exec=" "$file" | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
+			output=$name", "$exec
+			echo $output >> "$cache_cmd"
+		fi
+	done
+
+	for i in $(seq 1 $(find $HOME/.local/share/applications/ | wc -l))
+	do
+		file=$(find $HOME/.local/share/applications/ | awk NR==$i)
+		if [[ $file = *.desktop ]]
+		then
+			name=$(grep -v GenericName "$file" | awk -F "=" '/Name=/ {print $2}' | awk NR==1)
+			exec=$(grep "Exec=" "$file" | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
+			output=$name", "$exec
+			echo $output >> "$cache_cmd"
+		fi
+	done
+}
+
+cache()
+{
+	local IFS=:
+	if stest -dqr -n "$cache" $PATH
+	then
+		stest -flx $PATH | sort -u >> "$cache"
+	fi
+}
+
+[ ! -e "$cachedir" ] && mkdir -p "$cachedir"
+
+cache
+
+if stest -dqr -n "$cache_desktop_global" "/usr/share/applications" || stest -dqr -n "$cache_desktop_local" "$HOME/.local/share/applications"
+then
+	find /usr/share/applications/ -type f >>"$cache_desktop_global"
+	find $HOME/.local/share/applications -type f >>"$cache_desktop_local"
+	desktop_cmd
+fi
+
+cat "$cache"
+cat "$cache_cmd" | awk -F ", " '{print $1}'

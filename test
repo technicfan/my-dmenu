@@ -1,0 +1,34 @@
+#!/bin/bash
+
+cache_cmd="/home/technicfan/.cache/dmenu_cmd"
+
+desktop_cmd()
+{
+	rm "$cache_cmd"
+	for i in $(seq 1 $(find /usr/share/applications/ | wc -l))
+	do
+		file=$(find /usr/share/applications/ | awk NR==$i)
+		if [[ $file = *.desktop ]]
+		then
+			echo $file
+			name=$(grep -v GenericName "$file" | awk -F "=" '/Name=/ {print $2}' | awk NR==1)
+			exec=$(awk -F "=" '/Exec/ {print $2}' "$file" | awk NR==1)
+			output=$name", "$exec
+			echo $output >> "$cache_cmd"
+		fi
+	done
+
+	for i in $(seq 1 $(find $HOME/.local/share/applications/ | wc -l))
+	do
+		file=$(find $HOME/.local/share/applications/ | awk NR==$i)
+		if [[ $file = *.desktop ]]
+		then
+			name=$(grep -v GenericName "$file" | awk -F "=" '/Name=/ {print $2}' | awk NR==1)
+			exec=$(awk -F "=" '/Exec/ {print $2}' "$file" | awk NR==1)
+			output=$name", "$exec
+			echo $output >> "$cache_cmd"
+		fi
+	done
+}
+
+desktop_cmd
