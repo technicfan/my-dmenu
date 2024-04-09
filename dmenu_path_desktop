@@ -4,55 +4,64 @@ cachedir="$HOME/.cache"
 cache="$cachedir/dmenu_run"
 cache_desktop_global="$cachedir/dmenu_desktop_global"
 cache_desktop_local="$cachedir/dmenu_desktop_local"
-cache_cmd="$cachedir/dmenu_cmd"
+cache_desktop_cmd_global="$cachedir/dmenu_desktop_cmd_global"
+cache_desktop_cmd_local="$cachedir/dmenu_desktop_cmd_local"
 
-desktop_cmd()
+rebuild_desktop_cache()
 {
-	rm "$cache_cmd"
-	for i in $(seq 1 $(find /usr/share/applications/ | wc -l))
+	rm "$2"
+	readarray -t files < "$1"
+	for file in "${files[@]}"
 	do
-		file=$(find /usr/share/applications/ | awk NR==$i)
 		if [[ $file = *.desktop ]]
 		then
-			name=$(grep -v GenericName "$file" | awk -F "=" '/Name=/ {print $2}' | awk NR==1)
-			exec=$(grep "Exec=" "$file" | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
-			output=$name", "$exec
-			echo $output >> "$cache_cmd"
-		fi
-	done
+			if ! [[ $(awk -F "=" '/NoDisplay=/ {print $2}' "$file") = "true" && \
+					$(awk -F "=" '/Hidden=/ {print $2}' "$file") = "true" ]]
+			then
+				name=$(grep -v GenericName "$file" | awk -F "=" '/Name=/ {print $2}' | awk NR==1)
+				exec=$(grep "Exec=" "$file" | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
 
-	for i in $(seq 1 $(find $HOME/.local/share/applications/ | wc -l))
-	do
-		file=$(find $HOME/.local/share/applications/ | awk NR==$i)
-		if [[ $file = *.desktop ]]
-		then
-			name=$(grep -v GenericName "$file" | awk -F "=" '/Name=/ {print $2}' | awk NR==1)
-			exec=$(grep "Exec=" "$file" | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
-			output=$name", "$exec
-			echo $output >> "$cache_cmd"
+				if [[ -n $(awk -F "=" '/Path=/ {print $2}' "$file") ]]
+				then
+					exec="pushd ""$(awk -F "=" '/Path=/ {print $2}' "$file")"" && ""$exec"
+				fi
+
+				if [[ $(awk -F "=" '/Terminal=/ {print $2}' "$file") = "true" ]]
+				then
+					output=$name", $TERM -e $SHELL -c '""$exec""'"
+				else
+					output=$name", "$exec
+				fi
+
+				echo $output >> "$2"
+			fi
 		fi
 	done
 }
 
-cache()
+check_rebuild_cache()
 {
 	local IFS=:
-	if stest -dqr -n "$cache" $PATH
+	if stest -dqr -n "$1" $PATH
 	then
-		stest -flx $PATH | sort -u >> "$cache"
+		stest -flx $PATH | sort -u >> "$1"
 	fi
 }
 
 [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
 
-cache
+check_rebuild_cache "$cache"
 
-if stest -dqr -n "$cache_desktop_global" "/usr/share/applications" || stest -dqr -n "$cache_desktop_local" "$HOME/.local/share/applications"
+if stest -dqr -n "$cache_desktop_global" "/usr/share/applications" || \
+   ! cat "$cache_desktop_global"
 then
-	find /usr/share/applications/ -type f >>"$cache_desktop_global"
-	find $HOME/.local/share/applications -type f >>"$cache_desktop_local"
-	desktop_cmd
+	find /usr/share/applications/ -type f > "$cache_desktop_global"
+	rebuild_desktop_cache "$cache_desktop_global" "$cache_desktop_cmd_global"
 fi
 
-cat "$cache"
-cat "$cache_cmd" | awk -F ", " '{print $1}'
+if stest -dqr -n "$cache_desktop_local" "$HOME/.local/share/applications" || \
+   ! cat "$cache_desktop_local"
+then
+	find $HOME/.local/share/applications -type f > "$cache_desktop_local"
+	rebuild_desktop_cache "$cache_desktop_local" "$cache_desktop_cmd_local"
+fi
