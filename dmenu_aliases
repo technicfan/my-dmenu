@@ -1,0 +1,15 @@
+#!/bin/bash
+
+aliases_file="$HOME/.config/dmenu/aliases"
+
+if [[ -f "$aliases_file" ]]
+then
+    readarray -t aliases < "$aliases_file"
+    for alias in "${aliases[@]}"
+    do
+        if [[ $alias = "alias"*"="* ]]
+        then
+            echo "${alias//alias /}" | awk -F "=" '{print $1}' 
+        fi
+    done
+fi
