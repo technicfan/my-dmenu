@@ -39,6 +39,6 @@ execute()
 }
 
 checkrunning
-selection=$( (dmenu_path && dmenu_desktop && dmenu_aliases) | sort -u | dmenu "$@" )
+selection=$( (dmenu_path && dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u | dmenu "$@" )
 rm "$lockfile"
 execute "$selection"
