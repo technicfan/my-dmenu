@@ -1,31 +1,28 @@
 #!/bin/bash
 
 cachedir="$HOME/.cache/dmenu_desktop"
-cache="$cachedir/dmenu_desktop_run"
 cache_desktop_global="$cachedir/dmenu_desktop_global"
 cache_desktop_local="$cachedir/dmenu_desktop_local"
 cache_desktop_cmd_global="$cachedir/dmenu_desktop_cmd_global"
 cache_desktop_cmd_local="$cachedir/dmenu_desktop_cmd_local"
-cache_desktop_diff="$cachedir/dmenu_desktop_diff"
 
 get_desktop_details()
 {
 	if [[ $1 = *.desktop ]]
 	then
-		if ! [[ $(awk -F "=" '/NoDisplay=/ {print $2}' "$1") = "true" && \
-				$(awk -F "=" '/Hidden=/ {print $2}' "$1") = "true" ]]
+		if ! [[ $(awk -F "=" '/NoDisplay=/ {print $2}' "$1") = "true" && $(awk -F "=" '/Hidden=/ {print $2}' "$1") = "true" ]]
 		then
 			name=$(grep -v GenericName "$1" | awk -F "=" '/Name=/ {print $2}' | awk NR==1)
 			exec=$(grep "Exec=" "$1" | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
 
-			if [[ -n $(awk -F "=" '/Path=/ {print $2}' "$1") ]]
+			if [[ -n $(grep -v X-DocPath "$1" | awk -F "=" '/Path=/ {print $2}') ]]
 			then
 				exec="pushd \"""$(awk -F "=" '/Path=/ {print $2}' "$1")""\" && ""$exec"
 			fi
 
 			if [[ $(awk -F "=" '/Terminal=/ {print $2}' "$1") = "true" ]]
 			then
-				exec="$TERM -e $SHELL -c '""$exec""'"
+				exec="alacritty -e $SHELL -c '""$exec""'"
 			fi
 
 			output="$name""; ""$exec""; ""$1"
@@ -37,7 +34,7 @@ get_desktop_details()
 
 rebuild_desktop_cache()
 {
-	rm "$2"
+	[[ -f "$2" ]] && rm "$2"
 	readarray -t files < "$1"
 	for file in "${files[@]}"
 	do
@@ -47,48 +44,40 @@ rebuild_desktop_cache()
 
 add_remove_desktop()
 {
-	readarray -t changes < "$1"
-	for change in "${changes[@]}"
+	local changes="$1"
+	for i in $(seq 1 "$(echo "${changes[@]}" | wc -l)")
 	do
+		change="$(echo "${changes[@]}"| awk NR=="$i")"
 		if [[ "$change" = ">"* ]]
 		then
-			file="$(echo $change | sed 's/> //g')"
+			file="${change//> /}"
 			get_desktop_details "$file" >> "$2"
 		elif [[ "$change" = "<"* ]]
 		then
-			file="$(echo $change | sed 's/< //g' | sed 's/\//\\\//g')"
+			file="$(sed 's/\//\\\//g' <<<"${change//< /}")"
 			sed -i "/$file/d" "$2"
 		fi
 	done
 }
 
-check_changed_cache()
+check_change_desktop()
 {
-	local IFS=:
-	if stest -dqr -n "$1" $PATH
+	if [[ ! -f "$1" || ! -f "$2" ]]
 	then
-		stest -flx $PATH | sort -u >> "$1"
-	fi
-}
-
-check_changed_desktop()
-{
-	if [[ -n $(diff "$1" <(find "$3" -type f -name "*.desktop")) ]] || ! cat "$1"
+		find "$3" -type f -name "*.desktop" > "$1"
+		rebuild_desktop_cache "$1" "$2"
+	elif [[ -n $(diff "$1" <(find "$3" -type f -name "*.desktop")) ]]
 	then
-		if ! cat "$2" || ! cat "$1"
-		then
-			find "$3" -type f -name "*.desktop" > "$1"
-			rebuild_desktop_cache "$1" "$2"
-		else
-			diff "$1" <(find "$3" -type f -name "*.desktop") > "$cache_desktop_diff"
-			add_remove_desktop "$cache_desktop_diff" "$2"
-			find "$3" -type f -name "*.desktop" > "$1"
-		fi
+		diff=$(diff "$1" <(find "$3" -type f -name "*.desktop"))
+		add_remove_desktop "${diff[@]}" "$2"
+		find "$3" -type f -name "*.desktop" > "$1"
 	fi
 }
 
 [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
 
-check_changed_cache "$cache"
-check_changed_desktop "$cache_desktop_global" "$cache_desktop_cmd_global" "/usr/share/applications/"
-check_changed_desktop "$cache_desktop_local" "$cache_desktop_cmd_local" "$HOME/.local/share/applications/"
+check_change_desktop "$cache_desktop_global" "$cache_desktop_cmd_global" "/usr/share/applications/"
+check_change_desktop "$cache_desktop_local" "$cache_desktop_cmd_local" "$HOME/.local/share/applications/"
+
+awk -F "; " '{print $1}' "$cache_desktop_cmd_global"
+awk -F "; " '{print $1}' "$cache_desktop_cmd_local" 
