@@ -1,23 +1,30 @@
 #!/bin/bash
 
-if [[ $(pgrep -f dmenu_run_custom | wc -l) != 2 ]]
-then
-    echo "Already running!"
-    exit 1
-fi
-
-cachedir="$HOME/.cache/dmenu_desktop"
-aliases_file="$HOME/.config/dmenu/aliases"
+cachedir="$HOME/.cache/dmenu_custom"
+configdir="$HOME/.config/dmenu_custom"
+aliasesfile="$configdir/aliases"
+lockfile="$cachedir/lock"
 cache_desktop_cmd_global="$cachedir/dmenu_desktop_cmd_global"
 cache_desktop_cmd_local="$cachedir/dmenu_desktop_cmd_local"
+
+checkrunning()
+{
+    if [[ -f "$lockfile" ]]
+    then
+        echo "Already running!"
+        exit 1
+    else
+        touch "$lockfile"
+    fi
+}
 
 execute()
 {
     if [[ -n $1 ]]
     then
-        if [[ -f "$aliases_file" ]] && grep -qF "$1=" "$aliases_file"
+        if [[ -f "$aliasesfile" ]] && grep -qF "$1=" "$aliasesfile"
         then
-            cmd=$(grep "$1=" "$aliases_file" | sed "s/alias $1=//g")
+            cmd=$(grep "$1=" "$aliasesfile" | sed "s/alias $1=//g")
         elif grep -qF "$1;" "$cache_desktop_cmd_global"
         then
             cmd=$(grep "$1;" "$cache_desktop_cmd_global" | awk -F "; " '{print $2}')
@@ -31,5 +38,7 @@ execute()
     fi
 }
 
+checkrunning
 selection=$( (dmenu_path && dmenu_desktop && dmenu_aliases) | sort -u | dmenu "$@" )
+rm "$lockfile"
 execute "$selection"

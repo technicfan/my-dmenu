@@ -1,10 +1,10 @@
 #!/bin/bash
 
-aliases_file="$HOME/.config/dmenu/aliases"
+aliasesfile="$HOME/.config/dmenu_custom/aliases"
 
-if [[ -f "$aliases_file" ]]
+if [[ -f "$aliasesfile" ]]
 then
-    readarray -t aliases < "$aliases_file"
+    readarray -t aliases < "$aliasesfile"
     for alias in "${aliases[@]}"
     do
         if [[ $alias = "alias"*"="* ]]

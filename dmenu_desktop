@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cachedir="$HOME/.cache/dmenu_desktop"
+cachedir="$HOME/.cache/dmenu_custom"
 cache_desktop_global="$cachedir/dmenu_desktop_global"
 cache_desktop_local="$cachedir/dmenu_desktop_local"
 cache_desktop_cmd_global="$cachedir/dmenu_desktop_cmd_global"
