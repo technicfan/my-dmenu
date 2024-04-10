@@ -2,14 +2,19 @@
 
 cachedir="$HOME/.cache/dmenu_custom"
 configdir="$HOME/.config/dmenu_custom"
-aliasesfile="$configdir/aliases"
 lockfile="$cachedir/lock"
-cache_desktop_cmd_global="$cachedir/dmenu_desktop_cmd_global"
-cache_desktop_cmd_local="$cachedir/dmenu_desktop_cmd_local"
-cache_desktop_cmd_flatpak="$cachedir/dmenu_desktop_cmd_flatpak"
+aliasesfile="$configdir/aliases"
+cmdcaches=(
+    "$cachedir/dmenu_desktop_cmd_global"
+    "$cachedir/dmenu_desktop_cmd_local"
+    "$cachedir/dmenu_desktop_cmd_flatpak_global"
+    "$cachedir/dmenu_desktop_cmd_flatpak_local"
+)
 
 checkrunning()
 {
+    [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
+
     if [[ -f "$lockfile" ]]
     then
         echo "Already running!"
@@ -26,16 +31,19 @@ execute()
         if [[ -f "$aliasesfile" ]] && grep -qF "alias $1=" "$aliasesfile"
         then
             cmd=$(grep "alias $1=" "$aliasesfile" | sed "s/alias $1=//g")
-        elif grep -q "^$1;" "$cache_desktop_cmd_global"
+        fi
+        if [[ -z $cmd ]]
         then
-            cmd=$(grep "^$1;" "$cache_desktop_cmd_global" | awk -F "; " '{print $2}')
-        elif grep -q "^$1;" "$cache_desktop_cmd_local"
+            for cachefile in "${cmdcaches[@]}"
+            do
+                if [[ -f "$cachefile" ]] && grep -q "^$1;" "$cachefile"
+                then
+                    cmd=$(grep "^$1;" "$cachefile" | awk -F "; " '{print $2}')
+                fi
+            done
+        fi
+        if [[ -z $cmd ]]
         then
-            cmd=$(grep "^$1;" "$cache_desktop_cmd_local" | awk -F "; " '{print $2}')
-        elif grep -q "^$1;" "$cache_desktop_cmd_flatpak"
-        then
-            cmd=$(grep "^$1;" "$cache_desktop_cmd_flatpak" | awk -F "; " '{print $2}')
-        else
             cmd="$1"
         fi
         printf "$cmd" | ${SHELL:-"/bin/sh"}
