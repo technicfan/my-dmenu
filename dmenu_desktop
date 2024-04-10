@@ -3,8 +3,10 @@
 cachedir="$HOME/.cache/dmenu_custom"
 cache_desktop_global="$cachedir/dmenu_desktop_global"
 cache_desktop_local="$cachedir/dmenu_desktop_local"
+cache_desktop_flatpak="$cachedir/dmenu_desktop_flatpak"
 cache_desktop_cmd_global="$cachedir/dmenu_desktop_cmd_global"
 cache_desktop_cmd_local="$cachedir/dmenu_desktop_cmd_local"
+cache_desktop_cmd_flatpak="$cachedir/dmenu_desktop_cmd_flatpak"
 
 get_desktop_details()
 {
@@ -64,13 +66,13 @@ check_change_desktop()
 {
 	if [[ ! -f "$1" || ! -f "$2" ]]
 	then
-		find "$3" -type f -name "*.desktop" > "$1"
+		find "$3" -type f,l -name "*.desktop" > "$1"
 		rebuild_desktop_cache "$1" "$2"
-	elif [[ -n $(diff "$1" <(find "$3" -type f -name "*.desktop")) ]]
+	elif [[ -n $(diff "$1" <(find "$3" -type f,l -name "*.desktop")) ]]
 	then
-		diff=$(diff "$1" <(find "$3" -type f -name "*.desktop"))
+		diff=$(diff "$1" <(find "$3" -type f,l -name "*.desktop"))
 		add_remove_desktop "${diff[@]}" "$2"
-		find "$3" -type f -name "*.desktop" > "$1"
+		find "$3" -type f,l -name "*.desktop" > "$1"
 	fi
 }
 
@@ -78,6 +80,8 @@ check_change_desktop()
 
 check_change_desktop "$cache_desktop_global" "$cache_desktop_cmd_global" "/usr/share/applications/"
 check_change_desktop "$cache_desktop_local" "$cache_desktop_cmd_local" "$HOME/.local/share/applications/"
+check_change_desktop "$cache_desktop_flatpak" "$cache_desktop_cmd_flatpak" "/var/lib/flatpak/exports/share/applications/"
 
 awk -F "; " '{print $1}' "$cache_desktop_cmd_global"
-awk -F "; " '{print $1}' "$cache_desktop_cmd_local" 
+awk -F "; " '{print $1}' "$cache_desktop_cmd_local"
+awk -F "; " '{print $1}' "$cache_desktop_cmd_flatpak"

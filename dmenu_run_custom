@@ -6,6 +6,7 @@ aliasesfile="$configdir/aliases"
 lockfile="$cachedir/lock"
 cache_desktop_cmd_global="$cachedir/dmenu_desktop_cmd_global"
 cache_desktop_cmd_local="$cachedir/dmenu_desktop_cmd_local"
+cache_desktop_cmd_flatpak="$cachedir/dmenu_desktop_cmd_flatpak"
 
 checkrunning()
 {
@@ -31,6 +32,9 @@ execute()
         elif grep -q "^$1;" "$cache_desktop_cmd_local"
         then
             cmd=$(grep "^$1;" "$cache_desktop_cmd_local" | awk -F "; " '{print $2}')
+        elif grep -q "^$1;" "$cache_desktop_cmd_flatpak"
+        then
+            cmd=$(grep "^$1;" "$cache_desktop_cmd_flatpak" | awk -F "; " '{print $2}')
         else
             cmd="$1"
         fi
