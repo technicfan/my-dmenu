@@ -5,9 +5,11 @@ patches applied:
 -----------------
 own additions:
 - added dmenu_run_custom script
-    - includes .desktop files from .local/share/applications/ and /usr/share/
+    - includes .desktop files from ~/.local/share/applications/; /usr/share/;
+      /var/lib/flatpak/exports/share/applications/; ~/.local/flatpak/exports/share/applications/
+      if they exist
         - will take a little longer on first run to cache entries
-        - after initial caching will update on change (fast)
+        - after initial caching will update on change (slower, the more changes)
     - includes aliases from .config/dmenu_custom/aliases
         - syntax: alias <name>=<command>
     
