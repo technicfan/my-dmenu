@@ -2,6 +2,16 @@ patches applied:
 - xyz
 - height
 - border
+-----------------
+own additions:
+- added dmenu_run_custom script
+    - includes .desktop files from .local/share/applications/ and /usr/share/
+        - will take a little longer on first run to cache entries
+        - after initial caching will update on change (fast)
+    - includes aliases from .config/dmenu_custom/aliases
+        - syntax: alias <name>=<command>
+            - don't use quotes!
+    
 
 dmenu - dynamic menu
 ====================
