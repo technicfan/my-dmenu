@@ -10,7 +10,6 @@ own additions:
         - after initial caching will update on change (fast)
     - includes aliases from .config/dmenu_custom/aliases
         - syntax: alias <name>=<command>
-            - don't use quotes!
     
 
 dmenu - dynamic menu
