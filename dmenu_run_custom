@@ -22,15 +22,15 @@ execute()
 {
     if [[ -n $1 ]]
     then
-        if [[ -f "$aliasesfile" ]] && grep -qF "$1=" "$aliasesfile"
+        if [[ -f "$aliasesfile" ]] && grep -qF "alias $1=" "$aliasesfile"
         then
-            cmd=$(grep "$1=" "$aliasesfile" | sed "s/alias $1=//g")
-        elif grep -qF "$1;" "$cache_desktop_cmd_global"
+            cmd=$(grep "alias $1=" "$aliasesfile" | sed "s/alias $1=//g")
+        elif grep -q "^$1;" "$cache_desktop_cmd_global"
         then
-            cmd=$(grep "$1;" "$cache_desktop_cmd_global" | awk -F "; " '{print $2}')
-        elif grep -qF "$1" "$cache_desktop_cmd_local"
+            cmd=$(grep "^$1;" "$cache_desktop_cmd_global" | awk -F "; " '{print $2}')
+        elif grep -q "^$1;" "$cache_desktop_cmd_local"
         then
-            cmd=$(grep "$1" "$cache_desktop_cmd_local" | awk -F "; " '{print $2}')
+            cmd=$(grep "^$1;" "$cache_desktop_cmd_local" | awk -F "; " '{print $2}')
         else
             cmd="$1"
         fi
