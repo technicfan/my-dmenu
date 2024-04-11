@@ -42,7 +42,8 @@ get_desktop_details()
 	then
 		entry=$(sed -n '/\[Desktop Entry\]/,/^\[/p' "$1")
 
-		if ! [[ $(awk -F "=" '/NoDisplay=/ {print $2}' <(echo "${entry[@]}")) = "true" && $(awk -F "=" '/Hidden=/ {print $2}' <(echo "${entry[@]}")) = "true" ]]
+		if [[ ! $(grep "^NoDisplay=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" && ! $(grep "^Hidden=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" ]] && \
+		   [[ $(grep "^Type=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "Application" ]]
 		then
 			lang=$(echo "$LANG" | awk -F "_" '{print $1}')
 
@@ -60,7 +61,7 @@ get_desktop_details()
 				exec="pushd \"""$(grep "^Path=" <(echo "${entry[@]}") | awk -F "=" '{print $2}')""\" && ""$exec"
 			fi
 
-			if [[ $(awk -F "=" '/Terminal=/ {print $2}' <(echo "${entry[@]}")) = "true" ]]
+			if [[ $(grep "^Terminal=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" ]]
 			then
 				exec="alacritty -e $SHELL -c '""$exec""'"
 			fi
