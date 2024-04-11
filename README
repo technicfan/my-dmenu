@@ -10,8 +10,10 @@ own additions:
       if they exist
         - will build on make install (takes a little more time)
         - after initial caching will update on change (slower, the more changes)
-    - includes aliases from .config/dmenu_custom/aliases
+    - includes aliases from ~/.config/dmenu_custom/aliases
         - syntax: alias <name>=<command>
+    - removes entries specified in ~/.config/dmenu_custom/excludes
+        - just write one exclude per line
     
 
 dmenu - dynamic menu

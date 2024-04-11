@@ -4,6 +4,8 @@ cachedir="$HOME/.cache/dmenu_custom"
 configdir="$HOME/.config/dmenu_custom"
 lockfile="$cachedir/lock"
 aliasesfile="$configdir/aliases"
+excludefile="$configdir/excludes"
+cache="$cachedir/dmenu_run_custom"
 cmdcaches=(
     "$cachedir/dmenu_desktop_cmd_global"
     "$cachedir/dmenu_desktop_cmd_local"
@@ -49,8 +51,19 @@ execute()
 }
 
 checkrunning
-entries=$( (dmenu_path && dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u )
-selection=$(echo "${entries[@]}" | dmenu "$@")
+(dmenu_path && dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u > "$cache"
+if [[ -f "$excludefile" ]]
+then
+    readarray -t excludes < "$excludefile"
+    for exclude in "${excludes[@]}"
+    do
+        if grep -qx "$exclude" "$cache"
+        then
+            sed -i "/$exclude/d" "$cache"
+        fi
+    done
+fi
+selection=$(cat "$cache" | dmenu "$@")
 if [[ -n $selection ]]
 then
     execute "$selection"
