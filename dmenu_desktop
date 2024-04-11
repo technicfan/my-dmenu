@@ -1,10 +1,8 @@
 #!/bin/bash
 
 cachedir="$HOME/.cache/dmenu_custom"
-
-[ ! -e "$cachedir" ] && mkdir -p "$cachedir"
-
-caches=(
+lockfile="$cachedir/lock"
+filecaches=(
 	"$cachedir/dmenu_desktop_global"
 	"$cachedir/dmenu_desktop_local"
 	"$cachedir/dmenu_desktop_flatpak_global"
@@ -22,6 +20,21 @@ desktopdirs=(
 	"/var/lib/flatpak/exports/share/applications/"
 	"$HOME/.local/flatpak/exports/share/applications/"
 )
+
+[ ! -e "$cachedir" ] && mkdir -p "$cachedir"
+
+checkrunning()
+{
+    [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
+
+    if [[ -f "$lockfile" ]]
+    then
+        echo "Already running!"
+        exit 1
+    else
+        touch "$lockfile"
+    fi
+}
 
 get_desktop_details()
 {
@@ -95,10 +108,9 @@ check_change_desktop()
 	fi
 }
 
-if [[ "${#caches[@]}" = "${#cmdcaches[@]}" && "${#cmdcaches[@]}" = "${#desktopdirs[@]}" ]]
-then
-	for i in $(seq 0 $((${#desktopdirs[@]} - 1)))
-	do
-		check_change_desktop "${caches[i]}" "${cmdcaches[i]}" "${desktopdirs[i]}"
-	done
-fi
+checkrunning
+for i in $(seq 0 $((${#desktopdirs[@]} - 1)))
+do
+	check_change_desktop "${filecaches[i]}" "${cmdcaches[i]}" "${desktopdirs[i]}"
+done
+rm "$lockfile"

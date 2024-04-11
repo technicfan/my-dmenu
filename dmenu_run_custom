@@ -19,8 +19,6 @@ checkrunning()
     then
         echo "Already running!"
         exit 1
-    else
-        touch "$lockfile"
     fi
 }
 
@@ -53,7 +51,6 @@ execute()
 checkrunning
 entries=$( (dmenu_path && dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u )
 selection=$(echo "${entries[@]}" | dmenu "$@")
-rm "$lockfile"
 if [[ -n $selection ]]
 then
     execute "$selection"
