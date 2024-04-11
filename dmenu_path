@@ -5,6 +5,9 @@ cache="$cachedir/dmenu_run"
 
 [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
 
+PATH=$(echo "$PATH" | sed -e 's/:\/home\/technicfan\/.config\/qtile//g')
+PATH=$(echo "$PATH" | sed -e 's/:\/home\/technicfan\/Applications//g')
+
 IFS=:
 if stest -dqr -n "$cache" $PATH; then
 	stest -flx $PATH | sort -u | tee "$cache"

@@ -66,7 +66,8 @@ uninstall:
 		$(DESTDIR)$(PREFIX)/bin/dmenu_run_custom\
 		$(DESTDIR)$(PREFIX)/bin/stest\
 		$(DESTDIR)$(MANPREFIX)/man1/dmenu.1\
-		$(DESTDIR)$(MANPREFIX)/man1/stest.1
-	rm -r $(CACHEDIR)
+		$(DESTDIR)$(MANPREFIX)/man1/stest.1\
+		$(CACHE)
+	rm -rf $(CACHEDIR)
 
 .PHONY: all options clean dist install uninstall
