@@ -46,14 +46,9 @@ get_desktop_details()
 		then
 			lang=$(echo "$LANG" | awk -F "_" '{print $1}')
 
-			if [[ -n $lang ]]
+			if [[ -n $lang ]] && grep -q "^Name\[$lang\]=" <(echo "${entry[@]}")
 			then
-				if grep -q "^Name\[$lang\]=" <(echo "${entry[@]}")
-				then
-					name=$(grep "^Name\[$lang\]=" <(echo "${entry[@]}") | awk -F "=" '{print $2}' | awk NR==1)
-				else
-					name=$(grep "^Name=" <(echo "${entry[@]}") | awk -F "=" '{print $2}' | awk NR==1)
-				fi
+				name=$(grep "^Name\[$lang\]=" <(echo "${entry[@]}") | awk -F "=" '{print $2}' | awk NR==1)
 			else
 				name=$(grep "^Name=" <(echo "${entry[@]}") | awk -F "=" '{print $2}' | awk NR==1)
 			fi
