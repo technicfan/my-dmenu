@@ -51,7 +51,7 @@ execute()
 }
 
 checkrunning
-(dmenu_path && dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u > "$cache"
+(dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u > "$cache"
 if [[ -f "$excludefile" ]]
 then
     readarray -t excludes < "$excludefile"

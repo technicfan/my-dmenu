@@ -40,14 +40,14 @@ get_desktop_details()
 {
 	if [[ $1 = *.desktop ]]
 	then
-		if ! [[ $(awk -F "=" '/NoDisplay=/ {print $2}' "$1") = "true" && $(awk -F "=" '/Hidden=/ {print $2}' "$1") = "true" ]]
+		if ! [[ $(awk -F "=" '/NoDisplay=/ {print $2}' "$1") = "true" || $(awk -F "=" '/Hidden=/ {print $2}' "$1") = "true" ]]
 		then
-			name=$(grep -v GenericName "$1" | awk -F "=" '/Name=/ {print $2}' | awk NR==1)
-			exec=$(grep "Exec=" "$1" | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
+			name=$(grep "^Name=" "$1" | awk -F "=" '{print $2}' | awk NR==1)
+			exec=$(grep "^Exec=" "$1" | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
 
-			if [[ -n $(grep -v X-DocPath "$1" | awk -F "=" '/Path=/ {print $2}') ]]
+			if [[ -n $(grep "^Path=" "$1" | awk -F "=" '{print $2}') ]]
 			then
-				exec="pushd \"""$(awk -F "=" '/Path=/ {print $2}' "$1")""\" && ""$exec"
+				exec="pushd \"""$(grep "^Path=" "$1" | awk -F "=" '{print $2}')""\" && ""$exec"
 			fi
 
 			if [[ $(awk -F "=" '/Terminal=/ {print $2}' "$1") = "true" ]]
@@ -55,9 +55,7 @@ get_desktop_details()
 				exec="alacritty -e $SHELL -c '""$exec""'"
 			fi
 
-			output="$name""; ""$exec""; ""$1"
-
-			echo "$output"
+			echo "$name""; ""$exec""; ""$1"
 		fi
 	fi
 }
