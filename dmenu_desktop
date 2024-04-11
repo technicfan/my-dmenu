@@ -40,31 +40,32 @@ get_desktop_details()
 {
 	if [[ $1 = *.desktop ]]
 	then
-		file=$(sed -n '/\[Desktop Entry\]/,/^\[/p' "$1")
-		if ! [[ $(awk -F "=" '/NoDisplay=/ {print $2}' <(echo "${file[@]}")) = "true" && $(awk -F "=" '/Hidden=/ {print $2}' <(echo "${file[@]}")) = "true" ]]
+		entry=$(sed -n '/\[Desktop Entry\]/,/^\[/p' "$1")
+
+		if ! [[ $(awk -F "=" '/NoDisplay=/ {print $2}' <(echo "${entry[@]}")) = "true" && $(awk -F "=" '/Hidden=/ {print $2}' <(echo "${entry[@]}")) = "true" ]]
 		then
 			lang=$(echo "$LANG" | awk -F "_" '{print $1}')
 
 			if [[ -n $lang ]]
 			then
-				if grep -q "^Name\[$lang\]=" <(echo "${file[@]}")
+				if grep -q "^Name\[$lang\]=" <(echo "${entry[@]}")
 				then
-					name=$(grep "^Name\[$lang\]=" <(echo "${file[@]}") | awk -F "=" '{print $2}' | awk NR==1)
+					name=$(grep "^Name\[$lang\]=" <(echo "${entry[@]}") | awk -F "=" '{print $2}' | awk NR==1)
 				else
-					name=$(grep "^Name=" <(echo "${file[@]}") | awk -F "=" '{print $2}' | awk NR==1)
+					name=$(grep "^Name=" <(echo "${entry[@]}") | awk -F "=" '{print $2}' | awk NR==1)
 				fi
 			else
-				name=$(grep "^Name=" <(echo "${file[@]}") | awk -F "=" '{print $2}' | awk NR==1)
+				name=$(grep "^Name=" <(echo "${entry[@]}") | awk -F "=" '{print $2}' | awk NR==1)
 			fi
 
-			exec=$(grep "^Exec=" <(echo "${file[@]}") | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
+			exec=$(grep "^Exec=" <(echo "${entry[@]}") | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
 
-			if grep -q "^Path=" <(echo "${file[@]}")
+			if grep -q "^Path=" <(echo "${entry[@]}")
 			then
-				exec="pushd \"""$(grep "^Path=" <(echo "${file[@]}") | awk -F "=" '{print $2}')""\" && ""$exec"
+				exec="pushd \"""$(grep "^Path=" <(echo "${entry[@]}") | awk -F "=" '{print $2}')""\" && ""$exec"
 			fi
 
-			if [[ $(awk -F "=" '/Terminal=/ {print $2}' <(echo "${file[@]}")) = "true" ]]
+			if [[ $(awk -F "=" '/Terminal=/ {print $2}' <(echo "${entry[@]}")) = "true" ]]
 			then
 				exec="alacritty -e $SHELL -c '""$exec""'"
 			fi
