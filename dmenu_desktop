@@ -1,6 +1,9 @@
 #!/bin/bash
 
 cachedir="$HOME/.cache/dmenu_custom"
+
+[ ! -e "$cachedir" ] && mkdir -p "$cachedir"
+
 caches=(
 	"$cachedir/dmenu_desktop_global"
 	"$cachedir/dmenu_desktop_local"
