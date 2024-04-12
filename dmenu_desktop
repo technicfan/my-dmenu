@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cachedir="$HOME/.cache/dmenu_custom"
+cachedir="$HOME/.cache/l7-dmenu-desktop"
 lockfile="$cachedir/lock"
 filecaches=(
 	"$cachedir/dmenu_desktop_global"
@@ -58,16 +58,6 @@ get_desktop_name()
 	fi
 }
 
-rebuild_desktop_cache()
-{
-	[[ -f "$2" ]] && rm "$2"
-	readarray -t files < "$1"
-	for file in "${files[@]}"
-	do
-		get_desktop_name "$file" >> "$2"
-	done
-}
-
 add_remove_desktop()
 {
 	changes="$1"
@@ -93,7 +83,12 @@ check_change_desktop()
 		if [[ ! -f "$1" || ! -f "$2" ]]
 		then
 			find "$3" -type f,l -name "*.desktop" > "$1"
-			rebuild_desktop_cache "$1" "$2"
+			[[ -f "$2" ]] && rm "$2"
+			readarray -t files < "$1"
+			for file in "${files[@]}"
+			do
+				get_desktop_name "$file" >> "$2"
+			done
 		elif ! diff -q "$1" <(find "$3" -type f,l -name "*.desktop")
 		then
 			diff=$(diff "$1" <(find "$3" -type f,l -name "*.desktop"))

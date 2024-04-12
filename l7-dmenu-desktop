@@ -1,7 +1,7 @@
 #!/bin/bash
 
-cachedir="$HOME/.cache/dmenu_custom"
-configdir="$HOME/.config/dmenu_custom"
+cachedir="$HOME/.cache/l7-dmenu-desktop"
+configdir="$HOME/.config/l7-dmenu-desktop"
 lockfile="$cachedir/lock"
 aliasesfile="$configdir/aliases"
 excludefile="$configdir/excludes"
