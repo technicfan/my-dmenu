@@ -8,12 +8,13 @@ own additions:
     - includes .desktop files from ~/.local/share/applications/; /usr/share/;
       /var/lib/flatpak/exports/share/applications/; ~/.local/flatpak/exports/share/applications/
       if they exist
-        - will build on make install (takes a little more time)
-        - after initial caching will update on change (slower, the more changes)
+        - will build on make install (takes 5-10 seconds on my system)
+        - after initial caching will update on change (fast)
     - includes aliases from ~/.config/dmenu_custom/aliases
         - syntax: alias <name>=<command>
     - removes entries specified in ~/.config/dmenu_custom/excludes
-        - just write one exclude per line
+        - write one exclude per line
+    - you need to install "dex"
     
 
 dmenu - dynamic menu
