@@ -94,7 +94,7 @@ check_change_desktop()
 		then
 			find "$3" -type f,l -name "*.desktop" > "$1"
 			rebuild_desktop_cache "$1" "$2"
-		elif cmp -s "$1" <(find "$3" -type f,l -name "*.desktop")
+		elif ! diff -q "$1" <(find "$3" -type f,l -name "*.desktop")
 		then
 			diff=$(diff "$1" <(find "$3" -type f,l -name "*.desktop"))
 			add_remove_desktop "${diff[@]}" "$2"
