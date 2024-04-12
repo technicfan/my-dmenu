@@ -41,7 +41,8 @@ get_desktop_name()
 	if [[ $1 = *.desktop ]]
 	then
 		entry=$(sed -n '/\[Desktop Entry\]/,/^\[/p' "$1")
-		if [[ ! $(grep "^NoDisplay=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" && ! $(grep "^Hidden=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" ]] && \
+		if [[ ! $(grep "^NoDisplay=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" && \
+			  ! $(grep "^Hidden=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" ]] && \
 		   [[ $(grep "^Type=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "Application" ]]
 		then
 			lang=$(echo "$LANG" | awk -F "_" '{print $1}')
