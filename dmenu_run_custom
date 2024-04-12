@@ -5,7 +5,6 @@ configdir="$HOME/.config/dmenu_custom"
 lockfile="$cachedir/lock"
 aliasesfile="$configdir/aliases"
 excludefile="$configdir/excludes"
-cache="$cachedir/dmenu_run_custom"
 cmdcaches=(
     "$cachedir/dmenu_desktop_cmd_global"
     "$cachedir/dmenu_desktop_cmd_local"
@@ -15,8 +14,6 @@ cmdcaches=(
 
 checkrunning()
 {
-    [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
-
     if [[ -f "$lockfile" ]]
     then
         echo "Already running!"
@@ -34,11 +31,11 @@ execute()
         fi
         if [[ -z $cmd ]]
         then
-            for cachefile in "${cmdcaches[@]}"
+            for cmdcache in "${cmdcaches[@]}"
             do
-                if [[ -f "$cachefile" ]] && grep -q "^$1;" "$cachefile"
+                if [[ -f "$cmdcache" ]] && grep -q "^$1;" "$cmdcache"
                 then
-                    cmd=$(grep "^$1;" "$cachefile" | awk -F "; " '{print $2}')
+                    cmd=$(grep "^$1;" "$cmdcache" | awk -F "; " '{print $2}')
                 fi
             done
         fi
@@ -51,20 +48,17 @@ execute()
 }
 
 checkrunning
-(dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u > "$cache"
+entries=$( (dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u )
 if [[ -f "$excludefile" ]]
 then
     readarray -t excludes < "$excludefile"
     for exclude in "${excludes[@]}"
     do
-        if grep -qx "$exclude" "$cache"
+        if grep -qx "$exclude" <(echo "${entries[@]}")
         then
-            sed -i "/$exclude/d" "$cache"
+            entries=$(echo "${entries[@]}" | sed "/$exclude/d")
         fi
     done
 fi
-selection=$(cat "$cache" | dmenu "$@")
-if [[ -n $selection ]]
-then
-    execute "$selection"
-fi
+selection=$(echo "${entries[@]}" | dmenu "$@")
+execute "$selection"

@@ -21,8 +21,6 @@ desktopdirs=(
 	"$HOME/.local/flatpak/exports/share/applications/"
 )
 
-[ ! -e "$cachedir" ] && mkdir -p "$cachedir"
-
 checkrunning()
 {
     [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
