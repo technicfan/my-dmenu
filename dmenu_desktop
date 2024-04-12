@@ -4,18 +4,21 @@ cachedir="$HOME/.cache/dmenu_custom"
 lockfile="$cachedir/lock"
 filecaches=(
 	"$cachedir/dmenu_desktop_global"
+	"$cachedir/dmenu_desktop_global_local"
 	"$cachedir/dmenu_desktop_local"
 	"$cachedir/dmenu_desktop_flatpak_global"
 	"$cachedir/dmenu_desktop_flatpak_local"
 )
-cmdcaches=(
-    "$cachedir/dmenu_desktop_cmd_global"
-    "$cachedir/dmenu_desktop_cmd_local"
-    "$cachedir/dmenu_desktop_cmd_flatpak_global"
-    "$cachedir/dmenu_desktop_cmd_flatpak_local"
+namecaches=(
+    "$cachedir/dmenu_desktop_names_global"
+	"$cachedir/dmenu_desktop_names_global_local"
+    "$cachedir/dmenu_desktop_names_local"
+    "$cachedir/dmenu_desktop_names_flatpak_global"
+    "$cachedir/dmenu_desktop_names_flatpak_local"
 )
 desktopdirs=(
 	"/usr/share/applications/"
+	"/usr/local/share/applications/"
 	"$HOME/.local/share/applications/"
 	"/var/lib/flatpak/exports/share/applications/"
 	"$HOME/.local/flatpak/exports/share/applications/"
@@ -24,7 +27,6 @@ desktopdirs=(
 checkrunning()
 {
     [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
-
     if [[ -f "$lockfile" ]]
     then
         echo "Already running!"
@@ -34,37 +36,22 @@ checkrunning()
     fi
 }
 
-get_desktop_details()
+get_desktop_name()
 {
-	if [[ $1 = *.desktop ]]
+	if [[ $1 = *.desktop ]] && desktop-file-validate "$1"
 	then
 		entry=$(sed -n '/\[Desktop Entry\]/,/^\[/p' "$1")
-
 		if [[ ! $(grep "^NoDisplay=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" && ! $(grep "^Hidden=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" ]] && \
 		   [[ $(grep "^Type=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "Application" ]]
 		then
 			lang=$(echo "$LANG" | awk -F "_" '{print $1}')
-
 			if [[ -n $lang ]] && grep -q "^Name\[$lang\]=" <(echo "${entry[@]}")
 			then
 				name=$(grep "^Name\[$lang\]=" <(echo "${entry[@]}") | awk -F "=" '{print $2}' | awk NR==1)
 			else
 				name=$(grep "^Name=" <(echo "${entry[@]}") | awk -F "=" '{print $2}' | awk NR==1)
 			fi
-
-			exec=$(grep "^Exec=" <(echo "${entry[@]}") | sed 's/Exec=//g' | awk -F "%" '{print $1}' | awk NR==1)
-
-			if grep -q "^Path=" <(echo "${entry[@]}")
-			then
-				exec="pushd \"""$(grep "^Path=" <(echo "${entry[@]}") | awk -F "=" '{print $2}')""\" && ""$exec"
-			fi
-
-			if [[ $(grep "^Terminal=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" ]]
-			then
-				exec="alacritty -e $SHELL -c '""$exec""'"
-			fi
-
-			echo "$name""; ""$exec""; ""$1"
+			echo "$name""; ""$1"
 		fi
 	fi
 }
@@ -75,20 +62,20 @@ rebuild_desktop_cache()
 	readarray -t files < "$1"
 	for file in "${files[@]}"
 	do
-		get_desktop_details "$file" >> "$2"
+		get_desktop_name "$file" >> "$2"
 	done
 }
 
 add_remove_desktop()
 {
-	local changes="$1"
+	changes="$1"
 	for i in $(seq 1 "$(echo "${changes[@]}" | wc -l)")
 	do
 		change="$(echo "${changes[@]}"| awk NR=="$i")"
 		if [[ "$change" = ">"* ]]
 		then
 			file="${change//> /}"
-			get_desktop_details "$file" >> "$2"
+			get_desktop_name "$file" >> "$2"
 		elif [[ "$change" = "<"* ]]
 		then
 			file="$(sed 's/\//\\\//g' <<<"${change//< /}")"
@@ -118,6 +105,6 @@ check_change_desktop()
 checkrunning
 for i in $(seq 0 $((${#desktopdirs[@]} - 1)))
 do
-	check_change_desktop "${filecaches[i]}" "${cmdcaches[i]}" "${desktopdirs[i]}"
+	check_change_desktop "${filecaches[i]}" "${namecaches[i]}" "${desktopdirs[i]}"
 done
 rm "$lockfile"

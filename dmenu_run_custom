@@ -5,11 +5,12 @@ configdir="$HOME/.config/dmenu_custom"
 lockfile="$cachedir/lock"
 aliasesfile="$configdir/aliases"
 excludefile="$configdir/excludes"
-cmdcaches=(
-    "$cachedir/dmenu_desktop_cmd_global"
-    "$cachedir/dmenu_desktop_cmd_local"
-    "$cachedir/dmenu_desktop_cmd_flatpak_global"
-    "$cachedir/dmenu_desktop_cmd_flatpak_local"
+namecaches=(
+    "$cachedir/dmenu_desktop_names_global"
+    "$cachedir/dmenu_desktop_names_global_local"
+    "$cachedir/dmenu_desktop_names_local"
+    "$cachedir/dmenu_desktop_names_flatpak_global"
+    "$cachedir/dmenu_desktop_names_flatpak_local"
 )
 
 checkrunning()
@@ -27,23 +28,18 @@ execute()
     then
         if [[ -f "$aliasesfile" ]] && grep -qF "alias $1=" "$aliasesfile"
         then
-            cmd=$(grep "alias $1=" "$aliasesfile" | sed "s/alias $1=//g")
-        fi
-        if [[ -z $cmd ]]
-        then
-            for cmdcache in "${cmdcaches[@]}"
+            eval "$(grep "alias $1=" "$aliasesfile" | sed "s/alias $1=//g")"
+        else
+            for namecache in "${namecaches[@]}"
             do
-                if [[ -f "$cmdcache" ]] && grep -q "^$1;" "$cmdcache"
+                if [[ -f "$namecache" ]] && grep -q "^$1;" "$namecache"
                 then
-                    cmd=$(grep "^$1;" "$cmdcache" | awk -F "; " '{print $2}')
+                    dex --term alacritty "$(grep "^$1;" "$namecache" | awk -F "; " '{print $2}')"
+                    return
                 fi
             done
+            $1
         fi
-        if [[ -z $cmd ]]
-        then
-            cmd="$1"
-        fi
-        printf "$cmd" | ${SHELL:-"/bin/sh"}
     fi
 }
 
