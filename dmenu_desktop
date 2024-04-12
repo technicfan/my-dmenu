@@ -38,7 +38,7 @@ checkrunning()
 
 get_desktop_name()
 {
-	if [[ $1 = *.desktop ]] && desktop-file-validate "$1"
+	if [[ $1 = *.desktop ]]
 	then
 		entry=$(sed -n '/\[Desktop Entry\]/,/^\[/p' "$1")
 		if [[ ! $(grep "^NoDisplay=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" && ! $(grep "^Hidden=" <(echo "${entry[@]}") | awk -F "=" '{print $2}') = "true" ]] && \
