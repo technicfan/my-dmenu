@@ -8,7 +8,7 @@ own additions:
     - includes .desktop files from ~/.local/share/applications/; /usr/share/;
       /var/lib/flatpak/exports/share/applications/; ~/.local/flatpak/exports/share/applications/
       if they exist
-        - will build on make install (takes 5-10 seconds on my system)
+        - will build cache on make install (takes 5-10 seconds on my system)
         - after initial caching will update on change (fast)
     - includes aliases from ~/.config/dmenu_custom/aliases
         - syntax: alias <name>=<command>
