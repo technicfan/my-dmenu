@@ -52,24 +52,23 @@ execute()
 
 exclude()
 {
-    entries=$( (dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u )
+    list="$2"
     if [[ -f "$1" ]]
     then
         readarray -t excludes < "$1"
         for exclude in "${excludes[@]}"
         do
-            if grep -qx "$exclude" <(echo "${entries[@]}")
+            if grep -qx "$exclude" <(echo "${list[@]}")
             then
-                entries=$(echo "${entries[@]}" | sed "/$exclude/d")
+                list=$(echo "${list[@]}" | sed "/$exclude/d")
             fi
         done
     fi
+    echo "${list[@]}"
 }
 
 info()
 {
-    read=0
-    found=0
     for i in $(seq 0 $((${#filecaches[@]} - 1)))
     do
         if [[ -f "${filecaches[$i]}" ]]
@@ -85,7 +84,9 @@ info()
 }
 
 checkrunning "$lockfile"
-exclude "$excludefile"
+echo -ne "looking for changes..." && \
+entries=$(exclude "$excludefile" "$( (dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u )") &&\
+echo -ne "\r\033[K"
 info
 selection=$(echo "${entries[@]}" | dmenu "$@")
 execute "$selection"

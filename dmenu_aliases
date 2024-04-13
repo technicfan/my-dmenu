@@ -9,13 +9,13 @@ aliasesfile="$configdir/aliases"
 
 checkrunning()
 {
-    [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
-    if [[ -f "$lockfile" ]]
+    [ ! -e "$1" ] && mkdir -p "$1"
+    if [[ -f "$2" ]]
     then
         echo "Already running!"
         exit 1
     else
-        touch "$lockfile"
+        touch "$2"
     fi
 }
 
@@ -68,6 +68,6 @@ check_change_desktop()
 	fi
 }
 
-checkrunning
+checkrunning "$cachedir" "$lockfile"
 check_change_desktop "$aliasescache" "$aliasesnamecache" "$aliasesfile"
 rm "$lockfile"
