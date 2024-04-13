@@ -5,6 +5,13 @@ configdir="$HOME/.config/l7-dmenu-desktop"
 lockfile="$cachedir/lock"
 aliasesfile="$configdir/aliases"
 excludefile="$configdir/excludes"
+filecaches=(
+	"$cachedir/dmenu_desktop_global"
+	"$cachedir/dmenu_desktop_global_local"
+	"$cachedir/dmenu_desktop_local"
+	"$cachedir/dmenu_desktop_flatpak_global"
+	"$cachedir/dmenu_desktop_flatpak_local"
+)
 namecaches=(
     "$cachedir/dmenu_desktop_names_global"
     "$cachedir/dmenu_desktop_names_global_local"
@@ -15,7 +22,7 @@ namecaches=(
 
 checkrunning()
 {
-    if [[ -f "$lockfile" ]]
+    if [[ -f "$1" ]]
     then
         echo "Already running!"
         exit 1
@@ -43,18 +50,42 @@ execute()
     fi
 }
 
-checkrunning
-entries=$( (dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u )
-if [[ -f "$excludefile" ]]
-then
-    readarray -t excludes < "$excludefile"
-    for exclude in "${excludes[@]}"
+exclude()
+{
+    entries=$( (dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u )
+    if [[ -f "$1" ]]
+    then
+        readarray -t excludes < "$1"
+        for exclude in "${excludes[@]}"
+        do
+            if grep -qx "$exclude" <(echo "${entries[@]}")
+            then
+                entries=$(echo "${entries[@]}" | sed "/$exclude/d")
+            fi
+        done
+    fi
+}
+
+info()
+{
+    read=0
+    found=0
+    for i in $(seq 0 $((${#filecaches[@]} - 1)))
     do
-        if grep -qx "$exclude" <(echo "${entries[@]}")
+        if [[ -f "${filecaches[$i]}" ]]
         then
-            entries=$(echo "${entries[@]}" | sed "/$exclude/d")
+            read=$((read + $(wc -l "${filecaches[$i]}" | awk '{print $1}')))
+        fi
+        if [[ -f "${namecaches[$i]}" ]]
+        then
+            found=$((found + $(wc -l "${namecaches[$i]}" | awk '{print $1}')))
         fi
     done
-fi
+    echo "Read $read .desktop files, found $found apps."
+}
+
+checkrunning "$lockfile"
+exclude "$excludefile"
+info
 selection=$(echo "${entries[@]}" | dmenu "$@")
 execute "$selection"
