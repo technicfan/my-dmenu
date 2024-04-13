@@ -4,6 +4,7 @@ cachedir="$HOME/.cache/l7-dmenu-desktop"
 configdir="$HOME/.config/l7-dmenu-desktop"
 lockfile="$cachedir/lock"
 aliasesfile="$configdir/aliases"
+addpath="$configdir/addpath"
 excludefile="$configdir/excludes"
 filecaches=(
 	"$cachedir/dmenu_desktop_global"
@@ -85,7 +86,12 @@ info()
 
 checkrunning "$lockfile"
 echo -ne "looking for changes..." && \
-entries=$(exclude "$excludefile" "$( (dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u )") &&\
+if [[ -f "$addpath" ]]
+then
+    entries=$(exclude "$excludefile" "$( (dmenu_desktop && dmenu_aliases && dmenu_path) 2>/dev/null | sort -u )")
+else
+    entries=$(exclude "$excludefile" "$( (dmenu_desktop && dmenu_aliases) 2>/dev/null | sort -u )")
+fi &&\
 echo -ne "\r\033[K"
 info
 selection=$(echo "${entries[@]}" | dmenu "$@")
