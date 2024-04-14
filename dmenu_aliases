@@ -21,7 +21,7 @@ checkrunning()
 
 get_alias_name()
 {
-    if [[ $1 = "alias"*"="* ]]
+    if [[ $1 = "alias "*"="* ]]
     then
         echo "${1//alias /}" | awk -F "=" '{print $1}'
     fi
