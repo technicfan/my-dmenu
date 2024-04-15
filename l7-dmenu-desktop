@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [[ $1 = "--help" || $1 = "-h" ]]
+then
+    printf '%s\n' "Use --dmenu=<menu> to change menu command" \
+                "When not using --dmenu= flag arguments are passed to regular dmenu"
+    exit 0
+fi
+
 cachedir="$HOME/.cache/l7-dmenu-desktop"
 configdir="$HOME/.config/l7-dmenu-desktop"
 lockfile="$cachedir/lock"
@@ -36,7 +43,7 @@ execute()
     then
         if [[ -f "$aliasesfile" ]] && grep -qF "alias $1=" "$aliasesfile"
         then
-            eval "$(grep "alias $1=" "$aliasesfile" | sed "s/alias $1=//g")"
+            eval "$(grep "^alias $1=" "$aliasesfile" | sed "s/alias $1=//g")"
         else
             for namecache in "${namecaches[@]}"
             do
@@ -94,5 +101,11 @@ else
 fi &&\
 echo -ne "\r\033[K"
 info
-selection=$(echo "${entries[@]}" | dmenu "$@")
+if [[ $1 = "--dmenu="* ]]
+then
+    menu=${1//--dmenu=/}
+else
+    menu="dmenu $*"
+fi
+selection=$(echo "${entries[@]}" | $menu)
 execute "$selection"
