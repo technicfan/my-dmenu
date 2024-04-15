@@ -3,9 +3,6 @@ VERSION = 5.2
 
 # paths
 PREFIX = /usr
-USERHOME = $(shell eval echo "~${SUDO_USER}")
-CACHEDIR = $(USERHOME)/.cache/dmenu_custom
-CACHE = $(USERHOME)/.cache/dmenu_run
 MANPREFIX = $(PREFIX)/share/man
 
 X11INC = /usr/X11R6/include
