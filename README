@@ -1,8 +1,9 @@
 patches applied:
 - xyz
-- height
+- lineheight
 - border
 - qalc
+- numbers
     
     
 dmenu - dynamic menu
