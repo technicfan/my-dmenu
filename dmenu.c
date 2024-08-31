@@ -24,6 +24,8 @@
 #include "drw.h"
 #include "util.h"
 
+ #include <stdbool.h> 
+
 /* macros */
 #define INTERSECT(x,y,w,h,r)  (MAX(0, MIN((x)+(w),(r).x_org+(r).width)  - MAX((x),(r).x_org)) \
                              * MAX(0, MIN((y)+(h),(r).y_org+(r).height) - MAX((y),(r).y_org)))
@@ -51,8 +53,7 @@ static char numbers[NUMBERSBUFSIZE] = "";
 static char text[BUFSIZ] = "";
 static char *embed;
 static int bh, mw, mh;
-static int dmx, dmy;
-static unsigned int dmw;
+static bool normal;
 /*static int dmx = 0; put dmenu at this x offset */
 /*static int dmy = 0; put dmenu at this y offset (measured from the bottom if topbar is 0) */
 /*static unsigned int dmw = 0; make dmenu this wide */
@@ -167,10 +168,14 @@ drawitem(struct item *item, int x, int y, int w)
 		drw_setscheme(drw, scheme[SchemeOut]);
 	else
 		drw_setscheme(drw, scheme[SchemeNorm]);
-	char* temp = toLower(item->text);
-	if (temp != NULL) {
-		return drw_text(drw, x, y, w, bh, lrpad / 2, temp, 0);
-		free(temp);
+	if (normal)
+		return drw_text(drw, x, y, w, bh, lrpad / 2, item->text, 0);
+	else {
+		char* temp = toLower(item->text);
+		if (temp != NULL) {
+			return drw_text(drw, x, y, w, bh, lrpad / 2, temp, 0);
+			free(temp);
+		}
 	}
 	return 0;
 }
@@ -203,12 +208,16 @@ drawmenu(void)
 	/* lowercase edit by technicfan */
 	if (prompt && *prompt) {
 		drw_setscheme(drw, scheme[SchemeSel]);
-		char* temp = toLower(prompt);
-		if (temp != NULL) {
-			x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, temp, 0);
-			free(temp);
-		} else
-			x = 0;
+		if (normal)
+			x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, prompt, 0);
+		else {
+			char* temp = toLower(prompt);
+			if (temp != NULL) {
+				x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, temp, 0);
+				free(temp);
+			} else
+				x = 0;
+		}
 	}
 	/* draw input field */
 	w = (lines > 0 || !matches) ? mw - x : inputw;
@@ -235,14 +244,18 @@ drawmenu(void)
 			drw_text(drw, x, 0, w, bh, lrpad / 2, "<", 0);
 		}
 		x += w;
-		for (item = curr; item != next; item = item->right) {
-			/* lowercase edit by technicfan */
-			char* temp = toLower(item->text);
-			if (temp != NULL) {
-				x = drawitem(item, x, 0, textw_clamp(temp, mw - x - TEXTW(">") - TEXTW(numbers)));
-				free(temp);
+		/* lowercase edit by technicfan */
+		if (normal)
+			for (item = curr; item != next; item = item->right)
+				x = drawitem(item, x, 0, textw_clamp(item->text, mw - x - TEXTW(">") - TEXTW(numbers)));
+		else
+			for (item = curr; item != next; item = item->right) {
+				char* temp = toLower(item->text);
+				if (temp != NULL) {
+					x = drawitem(item, x, 0, textw_clamp(temp, mw - x - TEXTW(">") - TEXTW(numbers)));
+					free(temp);
+				}
 			}
-		}
 		if (next) {
 			w = TEXTW(">");
 			drw_setscheme(drw, scheme[SchemeNorm]);
@@ -827,15 +840,19 @@ setup(void)
 		mw = (dmw>0 ? dmw : wa.width);
 	}
 	/* lowercase edit by technicfan */
-	if (prompt && *prompt) {
-		char* temp = toLower(prompt);
-		if (temp != 0) {
-			promptw = TEXTW(temp) - lrpad / 4;
-			free(temp);
+	if (normal)
+		promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
+	else {
+		if (prompt && *prompt) {
+			char* temp = toLower(prompt);
+			if (temp != 0) {
+				promptw = TEXTW(temp) - lrpad / 4;
+				free(temp);
+			} else
+				exit(1);
 		} else
-			exit(1);
-	} else
-		promptw = 0;
+			promptw = 0;
+	}
 	inputw = mw / 3; /* input width: ~33% of monitor width */
 	match();
 
@@ -875,7 +892,7 @@ setup(void)
 static void
 usage(void)
 {
-	die("usage: dmenu [-bfiv] [-l lines] [-h height] [-p prompt] [-fn font] [-m monitor]\n"
+	die("usage: dmenu [-bfivn] [-l lines] [-h height] [-p prompt] [-fn font] [-m monitor]\n"
 	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
 }
 
@@ -896,6 +913,8 @@ main(int argc, char *argv[])
 			qalc.enable = 1;
 		else if (!strcmp(argv[i], "-f"))   /* grabs keyboard before reading stdin */
 			fast = 1;
+		else if (!strcmp(argv[i], "-n")) /* lowercase edit by technicfan */
+			normal = true;
 		else if (!strcmp(argv[i], "-i")) { /* case-insensitive item matching */
 			fstrncmp = strncasecmp;
 			fstrstr = cistrstr;
