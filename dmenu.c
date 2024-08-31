@@ -24,8 +24,6 @@
 #include "drw.h"
 #include "util.h"
 
- #include <stdbool.h> 
-
 /* macros */
 #define INTERSECT(x,y,w,h,r)  (MAX(0, MIN((x)+(w),(r).x_org+(r).width)  - MAX((x),(r).x_org)) \
                              * MAX(0, MIN((y)+(h),(r).y_org+(r).height) - MAX((y),(r).y_org)))
@@ -53,7 +51,7 @@ static char numbers[NUMBERSBUFSIZE] = "";
 static char text[BUFSIZ] = "";
 static char *embed;
 static int bh, mw, mh;
-static bool normal;
+static int normal;
 /*static int dmx = 0; put dmenu at this x offset */
 /*static int dmy = 0; put dmenu at this y offset (measured from the bottom if topbar is 0) */
 /*static unsigned int dmw = 0; make dmenu this wide */
@@ -168,7 +166,7 @@ drawitem(struct item *item, int x, int y, int w)
 		drw_setscheme(drw, scheme[SchemeOut]);
 	else
 		drw_setscheme(drw, scheme[SchemeNorm]);
-	if (normal)
+	if (normal == 1)
 		return drw_text(drw, x, y, w, bh, lrpad / 2, item->text, 0);
 	else {
 		char* temp = toLower(item->text);
@@ -208,7 +206,7 @@ drawmenu(void)
 	/* lowercase edit by technicfan */
 	if (prompt && *prompt) {
 		drw_setscheme(drw, scheme[SchemeSel]);
-		if (normal)
+		if (normal == 1)
 			x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, prompt, 0);
 		else {
 			char* temp = toLower(prompt);
@@ -245,7 +243,7 @@ drawmenu(void)
 		}
 		x += w;
 		/* lowercase edit by technicfan */
-		if (normal)
+		if (normal == 1)
 			for (item = curr; item != next; item = item->right)
 				x = drawitem(item, x, 0, textw_clamp(item->text, mw - x - TEXTW(">") - TEXTW(numbers)));
 		else
@@ -840,7 +838,7 @@ setup(void)
 		mw = (dmw>0 ? dmw : wa.width);
 	}
 	/* lowercase edit by technicfan */
-	if (normal)
+	if (normal == 1)
 		promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
 	else {
 		if (prompt && *prompt) {
@@ -892,7 +890,7 @@ setup(void)
 static void
 usage(void)
 {
-	die("usage: dmenu [-bfivn] [-l lines] [-h height] [-p prompt] [-fn font] [-m monitor]\n"
+	die("usage: dmenu [-bfinv] [-l lines] [-h height] [-p prompt] [-fn font] [-m monitor]\n"
 	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
 }
 
@@ -914,7 +912,7 @@ main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "-f"))   /* grabs keyboard before reading stdin */
 			fast = 1;
 		else if (!strcmp(argv[i], "-n")) /* lowercase edit by technicfan */
-			normal = true;
+			normal = 1;
 		else if (!strcmp(argv[i], "-i")) { /* case-insensitive item matching */
 			fstrncmp = strncasecmp;
 			fstrstr = cistrstr;
