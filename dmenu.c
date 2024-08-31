@@ -206,6 +206,7 @@ drawmenu(void)
 		char* temp = toLower(prompt);
 		if (temp != NULL) {
 			x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, temp, 0);
+			free(temp);
 		} else
 			x = 0;
 	}
@@ -234,8 +235,14 @@ drawmenu(void)
 			drw_text(drw, x, 0, w, bh, lrpad / 2, "<", 0);
 		}
 		x += w;
-		for (item = curr; item != next; item = item->right)
-			x = drawitem(item, x, 0, textw_clamp(item->text, mw - x - TEXTW(">") - TEXTW(numbers)));
+		for (item = curr; item != next; item = item->right) {
+			/* lowercase edit by technicfan */
+			char* temp = toLower(item->text);
+			if (temp != NULL) {
+				x = drawitem(item, x, 0, textw_clamp(temp, mw - x - TEXTW(">") - TEXTW(numbers)));
+				free(temp);
+			}
+		}
 		if (next) {
 			w = TEXTW(">");
 			drw_setscheme(drw, scheme[SchemeNorm]);
@@ -824,6 +831,7 @@ setup(void)
 		char* temp = toLower(prompt);
 		if (temp != 0) {
 			promptw = TEXTW(temp) - lrpad / 4;
+			free(temp);
 		} else
 			exit(1);
 	} else
