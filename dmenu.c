@@ -51,9 +51,11 @@ static char numbers[NUMBERSBUFSIZE] = "";
 static char text[BUFSIZ] = "";
 static char *embed;
 static int bh, mw, mh;
-static int dmx = 0; /* put dmenu at this x offset */
-static int dmy = 0; /* put dmenu at this y offset (measured from the bottom if topbar is 0) */
-static unsigned int dmw = 0; /* make dmenu this wide */
+static int dmx, dmy;
+static unsigned int dmw;
+/*static int dmx = 0; put dmenu at this x offset */
+/*static int dmy = 0; put dmenu at this y offset (measured from the bottom if topbar is 0) */
+/*static unsigned int dmw = 0; make dmenu this wide */
 static int inputw = 0, promptw;
 static int lrpad; /* sum of left and right padding */
 static size_t cursor;
@@ -843,6 +845,11 @@ usage(void)
 	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
 }
 
+char* toLower(char* s) {
+  for(char *p=s; *p; p++) *p=tolower(*p);
+  return s;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -881,7 +888,7 @@ main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "-m"))
 			mon = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "-p"))   /* adds prompt to left of input field */
-			prompt = argv[++i];
+			prompt = toLower(argv[++i]);
 		else if (!strcmp(argv[i], "-fn"))  /* font or font set */
 			fonts[0] = argv[++i];
 		else if (!strcmp(argv[i], "-nb"))  /* normal background color */
