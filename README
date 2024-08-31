@@ -4,6 +4,9 @@ patches applied:
 - border
 - qalc
 - numbers
+own changes:
+- change default xyw in config.h (probably not great implemented)
+- diplay prompt and items lowercase
     
     
 dmenu - dynamic menu

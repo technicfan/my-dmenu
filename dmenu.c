@@ -84,6 +84,15 @@ textw_clamp(const char *str, unsigned int n)
 	return MIN(w, n);
 }
 
+/* lowercase edit by technicfan */
+static char*
+toLower(const char* string) {
+	char* temp = malloc(strlen(string) + 1);
+	strcpy(temp, string);
+	for(char *p=temp; *p; p++) *p=tolower(*p);
+	return temp;
+}
+
 static void
 appenditem(struct item *item, struct item **list, struct item **last)
 {
@@ -158,8 +167,12 @@ drawitem(struct item *item, int x, int y, int w)
 		drw_setscheme(drw, scheme[SchemeOut]);
 	else
 		drw_setscheme(drw, scheme[SchemeNorm]);
-
-	return drw_text(drw, x, y, w, bh, lrpad / 2, item->text, 0);
+	char* temp = toLower(item->text);
+	if (temp != NULL) {
+		return drw_text(drw, x, y, w, bh, lrpad / 2, temp, 0);
+		free(temp);
+	}
+	return 0;
 }
 
 static void
@@ -187,9 +200,14 @@ drawmenu(void)
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	drw_rect(drw, 0, 0, mw, mh, 1, 1);
 
+	/* lowercase edit by technicfan */
 	if (prompt && *prompt) {
 		drw_setscheme(drw, scheme[SchemeSel]);
-		x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, prompt, 0);
+		char* temp = toLower(prompt);
+		if (temp != NULL) {
+			x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, temp, 0);
+		} else
+			x = 0;
 	}
 	/* draw input field */
 	w = (lines > 0 || !matches) ? mw - x : inputw;
@@ -801,7 +819,15 @@ setup(void)
 		y = topbar ? dmy : wa.height - mh - dmy;
 		mw = (dmw>0 ? dmw : wa.width);
 	}
-	promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
+	/* lowercase edit by technicfan */
+	if (prompt && *prompt) {
+		char* temp = toLower(prompt);
+		if (temp != 0) {
+			promptw = TEXTW(temp) - lrpad / 4;
+		} else
+			exit(1);
+	} else
+		promptw = 0;
 	inputw = mw / 3; /* input width: ~33% of monitor width */
 	match();
 
@@ -845,11 +871,6 @@ usage(void)
 	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
 }
 
-char* toLower(char* s) {
-  for(char *p=s; *p; p++) *p=tolower(*p);
-  return s;
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -888,7 +909,7 @@ main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "-m"))
 			mon = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "-p"))   /* adds prompt to left of input field */
-			prompt = toLower(argv[++i]);
+			prompt = argv[++i];
 		else if (!strcmp(argv[i], "-fn"))  /* font or font set */
 			fonts[0] = argv[++i];
 		else if (!strcmp(argv[i], "-nb"))  /* normal background color */
