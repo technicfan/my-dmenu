@@ -1,4 +1,4 @@
-patches applied:
+patches applied (tweaked for personal preference):
 - xyw
 - lineheight
 - border
@@ -6,6 +6,7 @@ patches applied:
 - fuzzymatch
 - fuzzyhighlight
 - alpha
+- no input
 own changes:
 - change default xyz in config.h (probably not a great implementation)
 - diplay prompt and items in lowercase (disable with -n)
