@@ -1,8 +1,9 @@
 patches applied:
-- xyz
+- xyw
 - lineheight
 - border
 - numbers
+- fuzzymatch
 own changes:
 - change default xyz in config.h (probably not a great implementation)
 - diplay prompt and items in lowercase (disable with -n)
