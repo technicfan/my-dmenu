@@ -33,7 +33,8 @@
 #define OPAQUE                0xffu
 
 /* enums */
-enum { SchemeNorm, SchemeSel, SchemeOut, SchemeLast }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeNormHighlight, SchemeSelHighlight,
+       SchemeOut, SchemeLast }; /* color schemes */
 
 struct item {
 	char *text;
@@ -87,10 +88,10 @@ textw_clamp(const char *str, unsigned int n)
 /* lowercase edit by technicfan */
 static char*
 toLower(const char* string) {
-	char* temp = malloc(strlen(string) + 1);
-	strcpy(temp, string);
-	for(char *p=temp; *p; p++) *p=tolower(*p);
-	return temp;
+	char *temp_lower = malloc(strlen(string) + 1);
+	strcpy(temp_lower, string);
+	for(char *p=temp_lower; *p; p++) *p=tolower(*p);
+	return temp_lower;
 }
 
 static void
@@ -158,21 +159,68 @@ cistrstr(const char *h, const char *n)
 	return NULL;
 }
 
+static void
+drawhighlights(struct item *item, int x, int y, int maxw)
+{
+	int i, indent;
+	char c, *highlight;
+	/* lowercase edit by technicfan */
+	char *temp_highlight = item->text;
+
+	if (normal != 1)
+		temp_highlight = toLower(temp_highlight);
+
+	if (!(strlen(temp_highlight) && strlen(text)) && temp_highlight != NULL)
+		return;
+
+	drw_setscheme(drw, scheme[item == sel
+	                   ? SchemeSelHighlight
+	                   : SchemeNormHighlight]);
+	for (i = 0, highlight = temp_highlight; *highlight && text[i];) {
+		if (!fstrncmp(highlight, &text[i], 1)) {
+			/* get indentation */
+			c = *highlight;
+			*highlight = '\0';
+			indent = TEXTW(temp_highlight);
+			*highlight = c;
+
+			/* highlight character */
+			c = highlight[1];
+			highlight[1] = '\0';
+			drw_text(
+				drw,
+				x + indent - (lrpad / 2.),
+				y,
+				MIN(maxw - indent, TEXTW(highlight) - lrpad),
+				bh, 0, highlight, 0
+			);
+			highlight[1] = c;
+			++i;
+		}
+		++highlight;
+	}
+}
+
 static int
 drawitem(struct item *item, int x, int y, int w)
 {
+	int r;
 	if (item == sel)
 		drw_setscheme(drw, scheme[SchemeSel]);
 	else if (item->out)
 		drw_setscheme(drw, scheme[SchemeOut]);
 	else
 		drw_setscheme(drw, scheme[SchemeNorm]);
-	if (normal == 1)
-		return drw_text(drw, x, y, w, bh, lrpad / 2, item->text, 0);
-	else {
-		char* temp = toLower(item->text);
-		if (temp != NULL) {
-			return drw_text(drw, x, y, w, bh, lrpad / 2, temp, 0);
+	if (normal == 1) {
+		r = drw_text(drw, x, y, w, bh, lrpad / 2, item->text, 0);
+		drawhighlights(item, x, y, w);
+		return r;
+	} else {
+		char *temp_item = toLower(item->text);
+		if (temp_item != NULL) {
+			r = drw_text(drw, x, y, w, bh, lrpad / 2, temp_item, 0);
+			drawhighlights(item, x, y, w);
+			return r;
 		}
 	}
 	return 0;
@@ -209,10 +257,9 @@ drawmenu(void)
 		if (normal == 1)
 			x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, prompt, 0);
 		else {
-			char* temp = toLower(prompt);
-			if (temp != NULL) {
-				x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, temp, 0);
-				free(temp);
+			char *temp_prompt = toLower(prompt);
+			if (temp_prompt != NULL) {
+				x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, temp_prompt, 0);
 			} else
 				x = 0;
 		}
@@ -252,7 +299,6 @@ drawmenu(void)
 				temp = toLower(item->text);
 				if (temp != NULL) {
 					x = drawitem(item, x, 0, textw_clamp(temp, mw - x - TEXTW(">") - TEXTW(numbers)));
-					free(temp);
 				}
 			}
 		}
@@ -841,10 +887,9 @@ setup(void)
 		promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
 	else {
 		if (prompt && *prompt) {
-			char* temp = toLower(prompt);
+			char *temp = toLower(prompt);
 			if (temp != NULL) {
 				promptw = TEXTW(temp) - lrpad / 4;
-				free(temp);
 			}
 		} else
 			promptw = 0;
@@ -893,7 +938,8 @@ usage(void)
 {
 	die("usage: dmenu [-bFfinv] [-l lines] [-h height] [-p prompt] [-fn font] [-m monitor]\n"
 		"			  [-x xoffset] [-y yoffset] [-z width] [-bw border_width]\n"
-	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
+	    "             [-nb color] [-nf color] [-sb color] [-sf color]\n"
+	    "             [-nhb color] [-nhf color] [-shb color] [-shf color] [-w windowid]");
 }
 
 int
@@ -947,6 +993,14 @@ main(int argc, char *argv[])
 			colors[SchemeSel][ColBg] = argv[++i];
 		else if (!strcmp(argv[i], "-sf"))  /* selected foreground color */
 			colors[SchemeSel][ColFg] = argv[++i];
+		else if (!strcmp(argv[i], "-nhb")) /* normal hi background color */
+			colors[SchemeNormHighlight][ColBg] = argv[++i];
+		else if (!strcmp(argv[i], "-nhf")) /* normal hi foreground color */
+			colors[SchemeNormHighlight][ColFg] = argv[++i];
+		else if (!strcmp(argv[i], "-shb")) /* selected hi background color */
+			colors[SchemeSelHighlight][ColBg] = argv[++i];
+		else if (!strcmp(argv[i], "-shf")) /* selected hi foreground color */
+			colors[SchemeSelHighlight][ColFg] = argv[++i];
 		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
 			embed = argv[++i];
 		else if (!strcmp(argv[i], "-bw"))
