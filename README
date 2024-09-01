@@ -4,6 +4,7 @@ patches applied:
 - border
 - numbers
 - fuzzymatch
+- alpha
 own changes:
 - change default xyz in config.h (probably not a great implementation)
 - diplay prompt and items in lowercase (disable with -n)
