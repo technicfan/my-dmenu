@@ -244,7 +244,6 @@ recalculatenumbers()
 static void
 drawmenu(void)
 {
-	unsigned int curpos;
 	struct item *item;
 	int x = 0, y = 0, fh = drw->fonts->h, w = 0;
 
@@ -266,15 +265,17 @@ drawmenu(void)
 	}
 
 	if (draw_input) {
+		unsigned int curpos;
+		curpos = TEXTW(text) - TEXTW(&text[cursor]);
+
 		w = (lines > 0 || !matches) ? mw - x : inputw;
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		drw_rect(drw, x + curpos, 2 + (bh - fh) / 2, 2, fh - 4, 1, 0);
 		drw_text(drw, x, (bh - fh) / 2, w, fh, lrpad / 2, text, 0);
 
-		curpos = TEXTW(text) - TEXTW(&text[cursor]);
 		if ((curpos += lrpad / 2 - 1) < w) {
 			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_rect(drw, x + curpos, 2, 2, bh - 4, 1, 0);
+			drw_rect(drw, x + curpos + 1, fh + 1, 5, 1, 1, 0);
 		}
 	}
 
@@ -825,6 +826,7 @@ static void
 setup(void)
 {
 	int x, y, i, j;
+	i = 0;
 	unsigned int du;
 	XSetWindowAttributes swa;
 	XIM xim;
@@ -890,12 +892,12 @@ setup(void)
 	}
 	/* lowercase edit by technicfan */
 	if (normal == 1)
-		promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
+		promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 - 5: 0;
 	else {
 		if (prompt && *prompt) {
 			char *temp = toLower(prompt);
 			if (temp != NULL) {
-				promptw = TEXTW(temp) - lrpad / 4;
+				promptw = TEXTW(temp) - lrpad / 4 - 5;
 			}
 		} else
 			promptw = 0;
