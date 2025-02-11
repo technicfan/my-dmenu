@@ -7,7 +7,7 @@ static const unsigned int alpha = 0xff;     /* Amount of opacity. 0xff is opaque
 static int draw_input = 1;                  /* -noi option; if 0, the input will not be drawn by default */
 /* -fn option overrides fonts[0]; default X11 font or font set */
 static const char *fonts[] = {
-	"JetBrains:bold:pixelsize=12"
+	"VictorMonoNerdFont:bold:pixelsize=12"
 };
 static const char *prompt = NULL;      /* -p  option; prompt to the left of input field */
 static const char *colors[SchemeLast][2] = {
