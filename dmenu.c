@@ -275,7 +275,7 @@ drawmenu(void)
 
 		if ((curpos += lrpad / 2 - 1) < w) {
 			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_rect(drw, x + curpos + 1, fh + 5, 5, 1, 1, 0);
+			drw_rect(drw, x + curpos + 1, fh + 4, 5, 1, 1, 0);
 		}
 	}
 
