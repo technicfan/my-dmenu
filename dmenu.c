@@ -275,7 +275,7 @@ drawmenu(void)
 
 		if ((curpos += lrpad / 2 - 1) < w) {
 			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_rect(drw, x + curpos + 1, fh + 1, 5, 1, 1, 0);
+			drw_rect(drw, x + curpos + 1, fh + 5, 5, 1, 1, 0);
 		}
 	}
 
@@ -897,7 +897,7 @@ setup(void)
 		if (prompt && *prompt) {
 			char *temp = toLower(prompt);
 			if (temp != NULL) {
-				promptw = TEXTW(temp) - lrpad / 4 - 5;
+				promptw = TEXTW(temp) - lrpad / 4 - 2;
 			}
 		} else
 			promptw = 0;

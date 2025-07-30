@@ -7,7 +7,7 @@ static const unsigned int alpha = 0xff;     /* Amount of opacity. 0xff is opaque
 static int draw_input = 1;                  /* -noi option; if 0, the input will not be drawn by default */
 /* -fn option overrides fonts[0]; default X11 font or font set */
 static const char *fonts[] = {
-	"VictorMonoNerdFont:bold:pixelsize=12"
+	"Terminus:pixelsize=14"
 };
 static const char *prompt = NULL;      /* -p  option; prompt to the left of input field */
 static const char *colors[SchemeLast][2] = {
@@ -28,12 +28,12 @@ static const unsigned int alphas[SchemeLast][2] = {
 /* -l option; if nonzero, dmenu uses vertical list with given number of lines */
 static unsigned int lines      = 0;
 /* -h option; minimum height of a menu line */
-static unsigned int lineheight = 26;
+static unsigned int lineheight = 25;
 static unsigned int min_lineheight = 8;
 
-static int dmx = 6;
-static int dmy = 6;
-static unsigned dmw = 1908;
+static int dmx = 0;
+static int dmy = 0;
+static unsigned dmw = 0;
 
 /*
  * Characters not considered part of a word while deleting words
